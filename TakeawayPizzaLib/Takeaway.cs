@@ -2,10 +2,12 @@
 {
     public class ReceiptItem
     {
+        // Properties
         public string Name = String.Empty;
         public decimal? Price;
         public List<ReceiptItem> SubItems = new();
 
+        // Member methods
         public decimal GetTotalPrice()
         {
             decimal result = Price ?? 0;

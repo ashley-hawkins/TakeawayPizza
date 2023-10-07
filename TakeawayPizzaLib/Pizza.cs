@@ -6,11 +6,33 @@
         public PizzaSize Size;
         public List<Topping> Toppings;
 
+        // Member methods
+        public readonly ReceiptItem GetReceiptItem()
+        {
+            ReceiptItem result = new()
+            {
+                Name = $"{SizeToStringDict[Size]} Pizza",
+                Price = GetPizzaPrice(Size)
+            };
+            if (Toppings.Count != 0)
+            {
+                result.SubItems = new() {
+                    new()
+                    {
+                        Name = $"Toppings x{6}",
+                        Price = GetToppingsPrice(Toppings.Count),
+                        SubItems = Toppings.Select(x => new ReceiptItem() { Name = ToppingToStringDict[x] } ).ToList()
+                    }
+                };
+            }
+            return result;
+        }
+
         // Constants
         public const int MinToppings = 0;
         public const int MaxToppings = 6;
 
-        // Implementation
+        // Supporting types/methods
         public enum PizzaSize
         {
             Small,
@@ -92,26 +114,6 @@
                 default:
                     return 2.50m;
             }
-        }
-        public readonly ReceiptItem GetReceiptItem()
-        {
-            ReceiptItem result = new()
-            {
-                Name = $"{SizeToStringDict[Size]} Pizza",
-                Price = GetPizzaPrice(Size)
-            };
-            if (Toppings.Count != 0)
-            {
-                result.SubItems = new() {
-                    new()
-                    {
-                        Name = $"Toppings x{6}",
-                        Price = GetToppingsPrice(Toppings.Count),
-                        SubItems = Toppings.Select(x => new ReceiptItem() { Name = ToppingToStringDict[x] } ).ToList()
-                    }
-                };
-            }
-            return result;
         }
     }
 }
