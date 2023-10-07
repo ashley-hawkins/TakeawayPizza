@@ -5,14 +5,14 @@ namespace TakeawayPizza
 {
     public struct Order
     {
-        // Members
+        // Properties
         public string Name;
         public string Address;
         public string PhoneNumber;
-        public Pizza[] Pizzas;
+        public List<Pizza> Pizzas;
         public bool NeedsDelivery;
 
-        // Extra stuff
+        // Constants
         public const int MinPizzas = 1;
         public const int MaxPizzas = 6;
     }

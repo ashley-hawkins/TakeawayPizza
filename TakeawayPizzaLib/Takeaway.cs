@@ -15,7 +15,7 @@ namespace TakeawayPizza
     {
         public string Name = String.Empty;
         public decimal? Price;
-        public ReceiptItem[] SubItems = Array.Empty<ReceiptItem>();
+        public List<ReceiptItem> SubItems = new();
 
         public decimal GetTotalPrice()
         {
@@ -33,48 +33,57 @@ namespace TakeawayPizza
 
         public const decimal DeliveryCharge = 2.50m;
 
-        public static Pizza InputPizza(int? n = null)
+        public static Pizza InputPizza(int n)
         {
             Pizza pizza = default;
-            string pizzaName = (n == null) ? "the pizza" : $"pizza {n}";
+            string pizzaName = $"pizza {n}";
 
-            Util.Input.ValidatedInput((string inputLine) =>
-            {
-                inputLine = Regex.Replace(inputLine, @"\s", "").ToUpper();
-                if (Pizza.StringToSizeDict.ContainsKey(inputLine))
+            // Take input for pizza.Size
+            Util.Input.ValidatedInput(
+                $"Please input the size of {pizzaName} (S, M, L, or XL): ",
+                out pizza.Size,
+                (string inputLine) =>
                 {
-                    return (Pizza.StringToSizeDict[inputLine], "", false);
-                }
-                else
-                {
-                    return (null, "That is not a valid size.", true);
-                }
-            }, $"Please input the size of {pizzaName} (S, M, L, or XL): ", out pizza.Size);
-
-            Util.Input.ValidatedInput((string inputLine) =>
-            {
-                inputLine = inputLine.Trim();
-                if (int.TryParse(inputLine, out int res))
-                {
-                    if (res < Pizza.MinToppings)
+                    inputLine = Regex.Replace(inputLine, @"\s", "").ToUpper();
+                    if (Pizza.StringToSizeDict.ContainsKey(inputLine))
                     {
-                        return (null, "That is below the minimum toppings you can specify.", true);
-                    }
-                    else if (res > Pizza.MaxToppings)
-                    {
-                        return (null, "That is above the maximum number of toppings you can specify.", true);
+                        return (Pizza.StringToSizeDict[inputLine], "", false);
                     }
                     else
                     {
-                        return (res, "", false);
+                        return (null, "That is not a valid size.", true);
                     }
-                }
-                else
-                {
-                    return (null, "That is not an integer.", true);
-                }
-            }, $"Please input the number of toppings for {pizzaName} ({Pizza.MinToppings}-{Pizza.MaxToppings}): ", out int numberOfToppings);
+                });
 
+            // Take input for the number of toppings
+            Util.Input.ValidatedInput(
+                $"Please input the number of toppings for {pizzaName} ({Pizza.MinToppings}-{Pizza.MaxToppings}): ",
+                out int numberOfToppings,
+                (string inputLine) =>
+                {
+                    inputLine = inputLine.Trim();
+                    if (int.TryParse(inputLine, out int res))
+                    {
+                        if (res < Pizza.MinToppings)
+                        {
+                            return (null, "That is below the minimum toppings you can specify.", true);
+                        }
+                        else if (res > Pizza.MaxToppings)
+                        {
+                            return (null, "That is above the maximum number of toppings you can specify.", true);
+                        }
+                        else
+                        {
+                            return (res, "", false);
+                        }
+                    }
+                    else
+                    {
+                        return (null, "That is not an integer.", true);
+                    }
+                });
+
+            // If the user wants toppings, format the string that is displayed to the user to show the topping IDs
             if (numberOfToppings != 0)
             {
                 string toppingsListString = "";
@@ -86,29 +95,35 @@ namespace TakeawayPizza
                 Console.WriteLine($"The following is a list of topping ID numbers followed by the topping they represent:\n{toppingsListString}");
             }
 
-            pizza.Toppings = new Pizza.Topping[numberOfToppings];
+            pizza.Toppings = new();
+
+            // Loop to take input for each topping
             for (int i = 0; i < numberOfToppings; ++i)
             {
-                Util.Input.ValidatedInput((string inputLine) =>
-                {
-                    inputLine = inputLine.Trim();
-                    if (int.TryParse(inputLine, out int res))
+                // Take input for the topping ID and validate it as a valid Pizza.Topping
+                Util.Input.ValidatedInput(
+                    $"Please input the topping ID for the {Util.Formatting.DecorateWithOrdinalIndicator(i + 1)} topping on {pizzaName}: ",
+                    out Pizza.Topping currentTopping,
+                    (string inputLine) =>
                     {
-                        if (Enum.IsDefined<Pizza.Topping>((Pizza.Topping)res))
+                        inputLine = inputLine.Trim();
+                        if (int.TryParse(inputLine, out int res))
                         {
-                            return ((Pizza.Topping)res, "", false);
+                            if (Enum.IsDefined<Pizza.Topping>((Pizza.Topping)res))
+                            {
+                                return ((Pizza.Topping)res, "", false);
+                            }
+                            else
+                            {
+                                return (null, "That is not a valid topping ID.", true);
+                            }
                         }
                         else
                         {
-                            return (null, "That is not a valid topping ID.", true);
+                            return (null, "That is not a number.", true);
                         }
-                    }
-                    else
-                    {
-                        return (null, "That is not a number.", true);
-                    }
-                }, $"Please input the topping ID for the {Util.Formatting.DecorateWithOrdinalIndicator(i + 1)} on {pizzaName}: ", out Pizza.Topping currentTopping);
-                pizza.Toppings[i] = currentTopping;
+                    });
+                pizza.Toppings.Add(currentTopping);
             }
             return pizza;
         }
@@ -120,8 +135,11 @@ namespace TakeawayPizza
             Console.Write("Please input your address: ");
             order.Address = Console.ReadLine().Trim();
 
-            {
-                Util.Input.ValidatedInput((string inputLine) =>
+            // Take input for phone number
+            Util.Input.ValidatedInput(
+                "Please input your phone number: ",
+                out string? phoneNumber,
+                (string inputLine) =>
                 {
                     inputLine = inputLine.Trim();
                     if (inputLine.All(c => Char.IsDigit(c)))
@@ -132,47 +150,50 @@ namespace TakeawayPizza
                     {
                         return (null, "That is not a number.", true);
                     }
-                },
-                "Please input your phone number: ",
-                out string? phoneNumber);
-                order.PhoneNumber = phoneNumber;
-            }
+                });
 
+            order.PhoneNumber = phoneNumber;
 
-            Util.Input.ValidatedInput((string inputLine) =>
-            {
-                inputLine = inputLine.Trim();
-                if (int.TryParse(inputLine, out int res))
+            // Take input for number of pizzas
+            Util.Input.ValidatedInput(
+                $"Please input the number of pizzas that you would like to order ({Order.MinPizzas}-{Order.MaxPizzas}): ",
+                out int pizzaAmount,
+                (string inputLine) =>
                 {
-                    if (res < Order.MinPizzas)
+                    inputLine = inputLine.Trim();
+                    if (int.TryParse(inputLine, out int res))
                     {
-                        return (null, "That is below the minimum pizzas you can specify.", true);
-                    }
-                    else if (res > Order.MaxPizzas)
-                    {
-                        return (null, "That is above the maximum number of pizzas you can specify.", true);
+                        if (res < Order.MinPizzas)
+                        {
+                            return (null, "That is below the minimum pizzas you can specify.", true);
+                        }
+                        else if (res > Order.MaxPizzas)
+                        {
+                            return (null, "That is above the maximum number of pizzas you can specify.", true);
+                        }
+                        else
+                        {
+                            return (res, "", false);
+                        }
                     }
                     else
                     {
-                        return (res, "", false);
+                        return (null, "That is not a number.", true);
                     }
-                }
-                else
-                {
-                    return (null, "That is not a number.", true);
-                }
-            },
-            $"Please input the number of pizzas that you would like to order ({Order.MinPizzas}-{Order.MaxPizzas}): ",
-            out int pizzaAmount);
+                });
 
-            order.Pizzas = new Pizza[pizzaAmount];
-            for (int i = 0; i < pizzaAmount; ++i)
+            order.Pizzas = new();
+            // Loop to take input for each pizza
+            for (int i = 1; i <= pizzaAmount; ++i)
             {
-                order.Pizzas[i] = InputPizza(i + 1);
+                order.Pizzas.Add(InputPizza(i));
             }
 
-            {
-                Util.Input.ValidatedInput((string inputLine) =>
+            // Take input for whether the order needs to be delivered
+            Util.Input.ValidatedInput(
+                "Would you like to have your order delivered to you? (Y/N): ",
+                out order.NeedsDelivery,
+                (string inputLine) =>
                 {
                     inputLine = inputLine.Trim().ToUpper();
                     if (inputLine == "Y" || inputLine == "N")
@@ -183,10 +204,7 @@ namespace TakeawayPizza
                     {
                         return (null, "That is not Y or N.", true);
                     }
-                },
-                "Would you like to have your order delivered to you? (Y/N): ",
-                out order.NeedsDelivery);
-            }
+                });
 
             return order;
         }

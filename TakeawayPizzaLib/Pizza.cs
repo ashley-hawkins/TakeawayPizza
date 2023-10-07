@@ -10,12 +10,13 @@ namespace TakeawayPizza
     {
         // Properties
         public PizzaSize Size;
-        public Topping[] Toppings;
+        public List<Topping> Toppings;
 
-        // Implementation
-
+        // Constants
         public const int MinToppings = 0;
         public const int MaxToppings = 6;
+
+        // Implementation
         public enum PizzaSize
         {
             Small,
@@ -105,14 +106,14 @@ namespace TakeawayPizza
                 Name = $"{SizeToStringDict[Size]} Pizza",
                 Price = GetPizzaPrice(Size)
             };
-            if (Toppings.Length != 0)
+            if (Toppings.Count != 0)
             {
-                result.SubItems = new ReceiptItem[] {
+                result.SubItems = new() {
                     new()
                     {
                         Name = $"Toppings x{6}",
-                        Price = GetToppingsPrice(Toppings.Length),
-                        SubItems = Toppings.Select(x => new ReceiptItem() { Name = ToppingToStringDict[x] } ).ToArray()
+                        Price = GetToppingsPrice(Toppings.Count),
+                        SubItems = Toppings.Select(x => new ReceiptItem() { Name = ToppingToStringDict[x] } ).ToList()
                     }
                 };
             }
