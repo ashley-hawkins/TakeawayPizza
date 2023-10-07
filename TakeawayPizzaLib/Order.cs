@@ -1,7 +1,4 @@
-﻿using System.Drawing;
-using System.Text.RegularExpressions;
-
-namespace TakeawayPizza
+﻿namespace TakeawayPizza
 {
     public struct Order
     {
